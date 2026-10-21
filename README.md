@@ -121,7 +121,7 @@ game.soundCheck()                                // what really got scheduled ag
 - **Flows:** all three songs to the end with the autopilot, 1 player EASY and NORMAL and 2 players (wake, walk, every pole, the green, the leaves, the bow, the reveal, results with 3 stars); a NORMAL run with no presses ending in THE LION IS TIRED!; the brother's whole visit (hop in, hello, treat, drum, boost 8 s, goodbye); the 2-player high five.
 - **Screens:** desktop and iPad landscape (1024 x 768), iPad portrait (820 x 1180), phone portrait (390 x 844) and landscape (740 x 360), 1 and 2 players, up to 4 lanes.
 - **中文:** with `Kit.lang.set('zh')`, home, the story, the ? panel, playing (1 and 2 players), the brother's visit, every treat, pause, the end and both kinds of results: `Kit.lang.untranslated()` is `[]`. In English mode no Chinese is on the page except the kit's language button tooltip, which names the language a tap switches to. In 中文 the logo adds 舞狮 under the English name.
-- **The single page** `dist/lion-dance-tt.html` opened from `file://` in headless Chrome for the screenshot. No console errors.
+- **Offline:** the single page `dist/lion-dance-tt.html` opened from `file://` in headless Chrome with the network blocked and drew the title screen (the logo in Arial Black). The screenshot is the same page online. No console errors in the Browser pane.
 
 ## Files
 
