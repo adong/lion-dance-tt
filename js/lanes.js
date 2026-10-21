@@ -259,7 +259,7 @@
   const RATE = { PERFECT: ['PERFECT!', '#ffe14a'], GREAT: ['GREAT!', '#7df7c8'], OK: ['OK!', '#9fd0ff'], miss: ['OOPS', '#ff8fb5'] };
   function pop(rating, x, y) {
     const [text, color] = RATE[rating];
-    pops.push({ text, color, x, y, t: 0, big: rating === 'PERFECT' });
+    pops.push({ text, color, x: Math.max(70, Math.min(W - 70, x)), y, t: 0, big: rating === 'PERFECT' });
     if (rating !== 'miss') for (let i = 0; i < (rating === 'PERFECT' ? 12 : 7); i++) {
       const a = Math.random() * Math.PI * 2, sp = 120 + Math.random() * 200;
       parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, t: 0, life: 0.45 + Math.random() * 0.25, c: rating === 'PERFECT' ? '#ffe14a' : '#ffffff' });

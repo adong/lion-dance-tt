@@ -42,20 +42,26 @@
     return t;
   }
 
+  // a white fur skirt with a gold band and soft pointed tufts along the bottom
   function fringeTexture() {
     const [c, g] = makeCanvas(64, 64);
     g.clearRect(0, 0, 64, 64);
     g.fillStyle = '#fff6e6';
-    g.fillRect(0, 0, 64, 16);
-    for (let i = 0; i < 8; i++) {
-      const x = i * 8 + 4;
-      g.fillStyle = i % 4 === 1 ? '#ffd24a' : '#fff6e6';
+    g.fillRect(0, 0, 64, 40);
+    g.fillStyle = '#ffd24a';
+    g.fillRect(0, 4, 64, 6);
+    for (let i = 0; i < 4; i++) {
+      const x = i * 16;
+      g.fillStyle = i % 2 ? '#fff0d6' : '#fff6e6';
       g.beginPath();
-      g.moveTo(x - 4, 10);
-      g.quadraticCurveTo(x + (i % 2 ? 3 : -3), 40, x, 56 + (i * 5) % 8);
-      g.quadraticCurveTo(x + (i % 2 ? 5 : -1), 40, x + 4, 10);
+      g.moveTo(x, 38);
+      g.quadraticCurveTo(x + 3, 54, x + 8, 62 - (i % 2) * 4);
+      g.quadraticCurveTo(x + 13, 54, x + 16, 38);
       g.fill();
     }
+    g.strokeStyle = 'rgba(200, 170, 130, 0.5)';
+    g.lineWidth = 1.5;
+    for (let x = 3; x < 64; x += 5) { g.beginPath(); g.moveTo(x, 14); g.lineTo(x + 1, 40); g.stroke(); }
     const t = toTexture(c, true);
     t.minFilter = T.LinearFilter;
     t.generateMipmaps = false;
@@ -188,7 +194,7 @@
     const fPos = new Float32Array((NU + 1) * 4 * 3), fUv = new Float32Array((NU + 1) * 4 * 2), fIdx = [];
     for (let s = 0; s < 2; s++) for (let i = 0; i <= NU; i++) {
       const k = (s * (NU + 1) + i) * 2;
-      fUv[k * 2] = fUv[(k + 1) * 2] = (i / NU) * 8;
+      fUv[k * 2] = fUv[(k + 1) * 2] = (i / NU) * 10;
       fUv[k * 2 + 1] = 1;
       fUv[(k + 1) * 2 + 1] = 0;
       if (i < NU) fIdx.push(k, k + 1, k + 2, k + 2, k + 1, k + 3);
@@ -196,7 +202,7 @@
     fGeo.setAttribute('position', new T.BufferAttribute(fPos, 3));
     fGeo.setAttribute('uv', new T.BufferAttribute(fUv, 2));
     fGeo.setIndex(fIdx);
-    L.fringe = new T.Mesh(fGeo, std('#ffffff', { map: fringeTexture(), transparent: true, alphaTest: 0.4, side: T.DoubleSide, roughness: 1, emissive: '#5a4a3a', emissiveIntensity: 0.4 }));
+    L.fringe = new T.Mesh(fGeo, std('#ffffff', { map: fringeTexture(), transparent: true, alphaTest: 0.4, side: T.DoubleSide, roughness: 1, emissive: '#5a4a3a', emissiveIntensity: 0.3 }));
     L.body.add(L.fringe);
     // fur down the spine, and the tail
     const furM = std(FUR, { roughness: 0.95 });
@@ -259,6 +265,7 @@
       fp.setXYZ(k + 1, tmp.x + sway, tmp.y - 0.34, tmp.z * 1.04);
     }
     fp.needsUpdate = true;
+    L.fringe.geometry.computeVertexNormals();
     L.fringe.geometry.computeBoundingSphere();
     for (let i = 0; i < 12; i++) {
       clothPoint(L, 0.06 + i * 0.075, 0.5, tmp);

@@ -269,7 +269,7 @@
       const col = document.createElement('div');
       col.className = 'rcol' + (o.win === i && o.rows.length > 1 ? ' win' : '');
       const role = G.solo ? '' : r.id === G.cast.head ? 'HEAD' : 'TAIL';
-      col.innerHTML = `<div class="who2"><img alt="" src="${faces[r.id]}"><span>${Kit.roster.get(r.id).name}${o.win === i && o.rows.length > 1 ? ' 👑' : ''}</span></div>` +
+      col.innerHTML = `<div class="who2"><img alt="" src="${faces[r.id]}"><span>${Kit.roster.get(r.id).name}</span>${o.win === i && o.rows.length > 1 ? '<span>👑</span>' : ''}</div>` +
         (role ? `<div class="rbest">${role}</div>` : '') +
         `<div class="rstars">${[0, 1, 2].map((k) => `<span class="${k < r.stars ? 'got' : ''}">⭐</span>`).join('')}</div>` +
         `<div class="rscore">${r.score.toLocaleString('en-US')}</div>` +
@@ -289,7 +289,7 @@
       music.tick();
       const st = { x: 0, y: 0, kind: 'stand', surface: 0, beat: t / song.spb, air: 0, sleep: 0, lift: 0, hideTags: false };
       LD.lion.update(G.lion, dt, st);
-      LD.stage.update(dt, t, G.lion, { look: { h: 4.4, w: 4.6 }, ahead: 0.5, fx: 0.5 });
+      LD.stage.update(dt, t, G.lion, { look: { h: 4.6, w: 5.6 }, ahead: 0.25, fx: 0.5 });
       LD.lanes.tick(dt);
       LD.lanes.draw(null);
       return;
@@ -311,8 +311,9 @@
     LD.lion.update(G.lion, dt, st);
     LD.buddy.update(dt, t / song.spb);
     const playing = G.state === 'play';
-    const look = playing ? { h: 7.6 + st.lift * 1.6, w: 9.5 } : { h: 4.6, w: 4.8 };
-    LD.stage.update(dt, t, G.lion, { look, ahead: playing ? (LD.buddy.present() ? -0.9 : 1.3) : 0.2, lift: playing ? st.lift * 0.8 : 0, fx: playing ? 0.46 : 0.5 });
+    const narrow = playing && G.lay && G.lay.free.w < 520;
+    const look = playing ? { h: (narrow ? 6 : 7.6) + st.lift * 1.6, w: narrow ? 6.4 : 9.5 } : { h: 4.6, w: 4.8 };
+    LD.stage.update(dt, t, G.lion, { look, ahead: playing ? (LD.buddy.present() ? -0.9 : narrow ? 0.8 : 1.3) : 0.2, lift: playing ? st.lift * 0.8 : 0, fx: playing ? 0.46 : 0.5 });
     for (const f of G.flash) for (let i = 0; i < f.length; i++) f[i] = Math.max(0, f[i] - dt * 5);
     LD.lanes.tick(dt);
     if (G.state === 'play') {
@@ -709,7 +710,7 @@
     setSong(prefs.song);
     G.state = 'home';
     goHome();
-    LD.stage.update(0, 0, G.lion, { snap: true, look: { h: 4.4, w: 4.6 }, ahead: 0.5, fx: 0.5 });
+    LD.stage.update(0, 0, G.lion, { snap: true, look: { h: 4.6, w: 5.6 }, ahead: 0.25, fx: 0.5 });
     ui.loading.style.opacity = '0';
     setTimeout(() => ui.loading.remove(), 450);
     requestAnimationFrame(loop);
@@ -735,8 +736,11 @@
     const missing = want.filter((e) => !played.some((p) => p.kind === e.kind && Math.abs(p.t - e.t) < 1e-6));
     const notes = G.players.flatMap((p) => p.e.notes).filter((n) => n.t >= from && n.t <= to);
     const silent = notes.filter((n) => !played.some((p) => p.kind === n.inst && Math.abs(p.t - n.t) < 1e-6));
-    const spacing = played.slice(1).every((p, i) => Math.abs((p.at - played[i].at) - (p.t - played[i].t)) < 0.002);
-    return { ok: !missing.length && !silent.length && spacing, scheduled: played.length, wanted: want.length, missing: missing.length, silentNotes: silent.length, notes: notes.length, onAudioClock: spacing, from: +from.toFixed(2), to: +to.toFixed(2) };
+    // every scheduled sound's audio time minus its song time: one value while the clock stays pinned to the audio
+    // clock; a pause may re-pin it once (then the values after it agree again)
+    const anchors = [];
+    for (const p of played) { const a = p.at - p.t; if (!anchors.length || Math.abs(a - anchors[anchors.length - 1]) > 0.002) anchors.push(a); }
+    return { ok: !missing.length && !silent.length, scheduled: played.length, wanted: want.length, missing: missing.length, silentNotes: silent.length, notes: notes.length, anchors: anchors.length, from: +from.toFixed(2), to: +to.toFixed(2) };
   }
 
   window.game = {
@@ -759,6 +763,8 @@
       return state();
     },
     autopilot(on = true) { G.auto = !!on; },
+    // one live frame on the real clocks (audio tests in a hidden pane, where animation frames are held back)
+    tick(dt = 1 / 60) { frame(dt); LD.stage.render(); },
     press(pi = 0, lane = 0) { return press(pi, lane); },
     call() { callBrother(); return LD.buddy.info(); },
     pause, resume, home: goHome, story: () => openStory(null), closeStory, results: () => G.outcome && showResults(),
